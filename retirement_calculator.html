@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Planning Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="number"], input[type="text"], input[type="button"] {
+            width: calc(100% - 22px);
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="button"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+        #results, #savedResults {
+            margin-top: 20px;
+        }
+        .savedResultItem {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .savedResultText {
+            color: #333;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+        .buttonContainer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+        .deleteButton, .importButton {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 10px; /* Side margin */
+        }
+        .deleteButton:hover, .importButton:hover {
+            background-color: #0056b3;
+        }
+        .savedResultsTitle {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+        @media (max-width: 480px) {
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Retirement Planning Calculator</h2>
+
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" placeholder="Enter your name">
+
+    <label for="currentAge">Current Age:</label>
+    <input type="number" id="currentAge" placeholder="e.g. 25">
+
+    <label for="retirementAge">Retirement Age:</label>
+    <input type="number" id="retirementAge" placeholder="e.g. 55">
+
+    <label for="lifeExpectancy">Life Expectancy:</label>
+    <input type="number" id="lifeExpectancy" placeholder="e.g. 90">
+
+    <label for="annualReturn">Expected Rate of Annual Return (%):</label>
+    <input type="number" id="annualReturn" placeholder="e.g. 12">
+
+    <label for="annualExpense">Current Annual Expense (in ₹):</label>
+    <input type="number" id="annualExpense" placeholder="e.g. 960000">
+
+    <label for="inflationRate">Annual Inflation Rate (%):</label>
+    <input type="number" id="inflationRate" placeholder="e.g. 6">
+
+    <input type="button" value="Calculate" onclick="calculateRetirement()">
+    <input type="button" value="Save Results" onclick="saveResults()">
+
+    <div id="results"></div>
+    <div id="savedResults"></div>
+</div>
+
+<script>
+function calculateRetirement() {
+    const currentAge = parseInt(document.getElementById("currentAge").value);
+    const retirementAge = parseInt(document.getElementById("retirementAge").value);
+    const lifeExpectancy = parseInt(document.getElementById("lifeExpectancy").value);
+    const annualReturn = parseFloat(document.getElementById("annualReturn").value) / 100;
+    const annualExpense = parseInt(document.getElementById("annualExpense").value);
+    const inflationRate = parseFloat(document.getElementById("inflationRate").value) / 100;
+
+    const yearsUntilRetirement = retirementAge - currentAge;
+    const futureExpenses = annualExpense * Math.pow(1 + inflationRate, yearsUntilRetirement);
+    const retirementDuration = lifeExpectancy - retirementAge;
+
+    let totalCorpusNeeded = 0;
+
+    // Calculate future annual expense at retirement age
+    const futureAnnualExpense = annualExpense * Math.pow(1 + inflationRate, retirementAge - currentAge);
+
+    // Loop to calculate total corpus needed over retirement duration
+    for (let i = 1; i <= retirementDuration; i++) {
+        const annualExpenseWithInflation = futureAnnualExpense * Math.pow(1 + inflationRate, i);
+        totalCorpusNeeded += annualExpenseWithInflation;
+    }
+
+    const monthlyInvestment = totalCorpusNeeded * (annualReturn / 12) / (Math.pow(1 + annualReturn / 12, yearsUntilRetirement * 12) - 1);
+
+    document.getElementById("results").innerHTML = `
+        <h3>Results</h3>
+        <p><strong>Retirement Corpus Needed:</strong> ₹${totalCorpusNeeded.toFixed(2)}</p>
+        <p><strong>Monthly Investment Required:</strong> ₹${monthlyInvestment.toFixed(2)}</p>
+    `;
+
+    // Store the calculated values along with inputs in a global variable for later use
+    window.calculatedResults = {
+        name: document.getElementById("name").value,
+        corpus: totalCorpusNeeded.toFixed(2),
+        investment: monthlyInvestment.toFixed(2),
+        inputs: {
+            currentAge,
+            retirementAge,
+            lifeExpectancy,
+            annualReturn: (annualReturn * 100).toFixed(2),
+            annualExpense,
+            inflationRate: (inflationRate * 100).toFixed(2)
+        }
+    };
+}
+
+function saveResults() {
+    if (!window.calculatedResults) {
+        alert("Please calculate the results first.");
+        return;
+    }
+
+    const results = JSON.parse(localStorage.getItem('retirementResults')) || [];
+    const isDuplicate = results.some(result =>
+        result.name === window.calculatedResults.name &&
+        result.corpus === window.calculatedResults.corpus &&
+        result.investment === window.calculatedResults.investment
+    );
+
+    if (isDuplicate) {
+        alert("This result already exists.");
+        return;
+    }
+
+    results.push(window.calculatedResults);
+    localStorage.setItem('retirementResults', JSON.stringify(results));
+    displaySavedResults();
+}
+
+function displaySavedResults() {
+    const savedResults = JSON.parse(localStorage.getItem('retirementResults')) || [];
+    const resultsDiv = document.getElementById("savedResults");
+    resultsDiv.innerHTML = "<h3 class='savedResultsTitle'>Saved Results</h3>";
+
+    savedResults.forEach((result, index) => {
+        resultsDiv.innerHTML += `
+            <div class="savedResultItem">
+                <div class="savedResultText"><strong>Name:</strong> ${result.name}</div>
+                <div class="savedResultText"><strong>Current Age:</strong> ${result.inputs.currentAge}</div>
+                <div class="savedResultText"><strong>Retirement Age:</strong> ${result.inputs.retirementAge}</div>
+                <div class="savedResultText"><strong>Life Expectancy:</strong> ${result.inputs.lifeExpectancy}</div>
+                <div class="savedResultText"><strong>Annual Return:</strong> ${result.inputs.annualReturn}%</div>
+                <div class="savedResultText"><strong>Annual Expense:</strong> ₹${result.inputs.annualExpense}</div>
+                <div class="savedResultText"><strong>Inflation Rate:</strong> ${result.inputs.inflationRate}%</div>
+                <div class="savedResultText"><strong>Required Corpus:</strong> ₹${result.corpus}</div>
+                <div class="savedResultText"><strong>Monthly Investment:</strong> ₹${result.investment}</div>
+                <div class="buttonContainer">
+                    <button class="importButton" onclick="importValues(${index})">Import</button>
+                    <button class="deleteButton" onclick="deleteResult(${index})">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function importValues(index) {
+    const results = JSON.parse(localStorage.getItem('retirementResults'));
+    const result = results[index];
+
+    document.getElementById("name").value = result.name;
+    document.getElementById("currentAge").value = result.inputs.currentAge;
+    document.getElementById("retirementAge").value = result.inputs.retirementAge;
+    document.getElementById("lifeExpectancy").value = result.inputs.lifeExpectancy;
+    document.getElementById("annualReturn").value = result.inputs.annualReturn;
+    document.getElementById("annualExpense").value = result.inputs.annualExpense;
+    document.getElementById("inflationRate").value = result.inputs.inflationRate;
+}
+
+function deleteResult(index) {
+    const results = JSON.parse(localStorage.getItem('retirementResults'));
+    results.splice(index, 1);
+    localStorage.setItem('retirementResults', JSON.stringify(results));
+    displaySavedResults();
+}
+
+// Display saved results on page load
+window.onload = displaySavedResults;
+
+</script>
+
+</body>
+</html>
