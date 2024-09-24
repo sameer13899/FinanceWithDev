@@ -113,6 +113,9 @@
     <label for="annualReturn">Expected Rate of Annual Return (%):</label>
     <input type="number" id="annualReturn" placeholder="e.g. 12">
 
+    <label for="postRetirementReturn">Post-Retirement Annual Return (%):</label>
+    <input type="number" id="postRetirementReturn" placeholder="e.g. 8">
+
     <label for="annualExpense">Current Annual Expense (in ₹):</label>
     <input type="number" id="annualExpense" placeholder="e.g. 960000">
 
@@ -132,6 +135,7 @@ function calculateRetirement() {
     const retirementAge = parseInt(document.getElementById("retirementAge").value);
     const lifeExpectancy = parseInt(document.getElementById("lifeExpectancy").value);
     const annualReturn = parseFloat(document.getElementById("annualReturn").value) / 100;
+    const postRetirementReturn = parseFloat(document.getElementById("postRetirementReturn").value) / 100;
     const annualExpense = parseInt(document.getElementById("annualExpense").value);
     const inflationRate = parseFloat(document.getElementById("inflationRate").value) / 100;
 
@@ -147,7 +151,8 @@ function calculateRetirement() {
     // Loop to calculate total corpus needed over retirement duration
     for (let i = 1; i <= retirementDuration; i++) {
         const annualExpenseWithInflation = futureAnnualExpense * Math.pow(1 + inflationRate, i);
-        totalCorpusNeeded += annualExpenseWithInflation;
+        const discountFactor = Math.pow(1 + postRetirementReturn, i);  // Use post-retirement return
+        totalCorpusNeeded += annualExpenseWithInflation / discountFactor;
     }
 
     const monthlyInvestment = totalCorpusNeeded * (annualReturn / 12) / (Math.pow(1 + annualReturn / 12, yearsUntilRetirement * 12) - 1);
@@ -168,6 +173,7 @@ function calculateRetirement() {
             retirementAge,
             lifeExpectancy,
             annualReturn: (annualReturn * 100).toFixed(2),
+            postRetirementReturn: (postRetirementReturn * 100).toFixed(2),
             annualExpense,
             inflationRate: (inflationRate * 100).toFixed(2)
         }
@@ -210,6 +216,7 @@ function displaySavedResults() {
                 <div class="savedResultText"><strong>Retirement Age:</strong> ${result.inputs.retirementAge}</div>
                 <div class="savedResultText"><strong>Life Expectancy:</strong> ${result.inputs.lifeExpectancy}</div>
                 <div class="savedResultText"><strong>Annual Return:</strong> ${result.inputs.annualReturn}%</div>
+                <div class="savedResultText"><strong>Post-Retirement Return:</strong> ${result.inputs.postRetirementReturn}%</div>
                 <div class="savedResultText"><strong>Annual Expense:</strong> ₹${result.inputs.annualExpense}</div>
                 <div class="savedResultText"><strong>Inflation Rate:</strong> ${result.inputs.inflationRate}%</div>
                 <div class="savedResultText"><strong>Required Corpus:</strong> ₹${result.corpus}</div>
@@ -232,6 +239,7 @@ function importValues(index) {
     document.getElementById("retirementAge").value = result.inputs.retirementAge;
     document.getElementById("lifeExpectancy").value = result.inputs.lifeExpectancy;
     document.getElementById("annualReturn").value = result.inputs.annualReturn;
+    document.getElementById("postRetirementReturn").value = result.inputs.postRetirementReturn;
     document.getElementById("annualExpense").value = result.inputs.annualExpense;
     document.getElementById("inflationRate").value = result.inputs.inflationRate;
 }
