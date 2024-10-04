@@ -27,9 +27,12 @@ for file in $(find "$PROJECT_ROOT" -type f \( -name "*.js" -o -name "*.ts" -o -n
     done < <(grep -E "import .* from[[:space:]]+['\"]@sameer/soni[^'\"]*['\"]" "$file")
 done
 
-# Write unique import paths to the CSV file
-for path in "${!import_paths[@]}"; do
+# Create a sorted list of unique import paths
+sorted_paths=($(printf "%s\n" "${!import_paths[@]}" | sort))
+
+# Write the sorted unique import paths to the CSV file
+for path in "${sorted_paths[@]}"; do
     echo "$path" >> "$OUTPUT_FILE"
 done
 
-echo "CSV file with unique import paths generated at $OUTPUT_FILE"
+echo "CSV file with unique and sorted import paths generated at $OUTPUT_FILE"
