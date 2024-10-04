@@ -16,7 +16,10 @@ for file in $(find "$PROJECT_ROOT" -type f \( -name "*.js" -o -name "*.ts" -o -n
     while IFS= read -r line; do
         # Extract the import path
         IMPORT_PATH=$(echo "$line" | grep -o "['\"]@sameer/soni[^'\"]*['\"]" | tr -d "'\"")
-        
+
+        # Remove the '@' character from the IMPORT_PATH
+        IMPORT_PATH="${IMPORT_PATH/@/}"
+
         # Add to associative array if it's not already present
         if [[ -n "$IMPORT_PATH" ]]; then
             import_paths["$IMPORT_PATH"]=1
