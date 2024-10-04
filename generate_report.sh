@@ -10,16 +10,18 @@ echo "Import Path" > "$OUTPUT_FILE"
 # Create an associative array to track unique import paths
 declare -A import_paths
 
-# Scan through each JavaScript or TypeScript file in the project
-find "$PROJECT_ROOT" -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) | while read -r file; do
+# Find all relevant files and iterate over them
+for file in $(find "$PROJECT_ROOT" -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \)); do
     # Extract lines with any import from "@sameer/soni" or '@sameer/soni' package or its submodules
-    grep -E "import .* from[[:space:]]+['\"]@sameer/soni[^'\"]*['\"]" "$file" | while read -r line; do
+    while IFS= read -r line; do
         # Extract the import path
         IMPORT_PATH=$(echo "$line" | grep -o "['\"]@sameer/soni[^'\"]*['\"]" | tr -d "'\"")
         
         # Add to associative array if it's not already present
-        import_paths["$IMPORT_PATH"]=1
-    done
+        if [[ -n "$IMPORT_PATH" ]]; then
+            import_paths["$IMPORT_PATH"]=1
+        fi
+    done < <(grep -E "import .* from[[:space:]]+['\"]@sameer/soni[^'\"]*['\"]" "$file")
 done
 
 # Write unique import paths to the CSV file
